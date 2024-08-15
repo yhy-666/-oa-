@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.reimbursement.mapper.ReimbursementMapper">
+    
+    <resultMap type="Reimbursement" id="ReimbursementResult">
+        <result property="reimbursementId"    column="reimbursement_id"    />
+        <result property="amount"    column="amount"    />
+        <result property="status"    column="status"    />
+        <result property="type"    column="type"    />
+        <result property="applicantId"    column="applicant_id"    />
+        <result property="approverId"    column="approver_id"    />
+        <result property="note"    column="note"    />
+    </resultMap>
+
+    <sql id="selectReimbursementVo">
+        select reimbursement_id, amount, status, type, applicant_id, approver_id, note from Reimbursement
+    </sql>
+
+    <select id="selectReimbursementList" parameterType="Reimbursement" resultMap="ReimbursementResult">
+        <include refid="selectReimbursementVo"/>
+        <where>  
+            <if test="params.beginAmount != null and params.beginAmount != '' and params.endAmount != null and params.endAmount != ''"> and amount between #{params.beginAmount} and #{params.endAmount}</if>
+            <if test="type != null  and type != ''"> and type = #{type}</if>
+            <if test="applicantId != null "> and applicant_id = #{applicantId}</if>
+            <if test="approverId != null "> and approver_id = #{approverId}</if>
+        </where>
+    </select>
+    
+    <select id="selectReimbursementByReimbursementId" parameterType="Long" resultMap="ReimbursementResult">
+        <include refid="selectReimbursementVo"/>
+        where reimbursement_id = #{reimbursementId}
+    </select>
+        
+    <insert id="insertReimbursement" parameterType="Reimbursement">
+        insert into Reimbursement
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="reimbursementId != null">reimbursement_id,</if>
+            <if test="amount != null">amount,</if>
+            <if test="status != null">status,</if>
+            <if test="type != null">type,</if>
+            <if test="applicantId != null">applicant_id,</if>
+            <if test="approverId != null">approver_id,</if>
+            <if test="note != null">note,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="reimbursementId != null">#{reimbursementId},</if>
+            <if test="amount != null">#{amount},</if>
+            <if test="status != null">#{status},</if>
+            <if test="type != null">#{type},</if>
+            <if test="applicantId != null">#{applicantId},</if>
+            <if test="approverId != null">#{approverId},</if>
+            <if test="note != null">#{note},</if>
+         </trim>
+    </insert>
+
+    <update id="updateReimbursement" parameterType="Reimbursement">
+        update Reimbursement
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="amount != null">amount = #{amount},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="applicantId != null">applicant_id = #{applicantId},</if>
+            <if test="approverId != null">approver_id = #{approverId},</if>
+            <if test="note != null">note = #{note},</if>
+        </trim>
+        where reimbursement_id = #{reimbursementId}
+    </update>
+
+    <delete id="deleteReimbursementByReimbursementId" parameterType="Long">
+        delete from Reimbursement where reimbursement_id = #{reimbursementId}
+    </delete>
+
+    <delete id="deleteReimbursementByReimbursementIds" parameterType="String">
+        delete from Reimbursement where reimbursement_id in 
+        <foreach item="reimbursementId" collection="array" open="(" separator="," close=")">
+            #{reimbursementId}
+        </foreach>
+    </delete>
+</mapper>

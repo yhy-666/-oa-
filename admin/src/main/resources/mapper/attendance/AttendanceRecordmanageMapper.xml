@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.attendance.manage.mapper.AttendanceRecordmanageMapper">
+    
+    <resultMap type="AttendanceRecordmanage" id="AttendanceRecordmanageResult">
+        <result property="recordId"    column="record_id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="attendanceDate"    column="attendance_date"    />
+        <result property="startTime"    column="start_time"    />
+        <result property="endTime"    column="end_time"    />
+        <result property="attendanceType"    column="attendance_type"    />
+    </resultMap>
+
+    <sql id="selectAttendanceRecordmanageVo">
+        select record_id, user_id, attendance_date, start_time, end_time, attendance_type from attendance_record
+    </sql>
+
+    <select id="selectAttendanceRecordmanageList" parameterType="AttendanceRecordmanage" resultMap="AttendanceRecordmanageResult">
+        <include refid="selectAttendanceRecordmanageVo"/>
+        <where>  
+            <if test="recordId != null "> and record_id = #{recordId}</if>
+            <if test="userId != null "> and user_id = #{userId}</if>
+            <if test="attendanceDate != null "> and attendance_date = #{attendanceDate}</if>
+        </where>
+    </select>
+    
+    <select id="selectAttendanceRecordmanageByRecordId" parameterType="Long" resultMap="AttendanceRecordmanageResult">
+        <include refid="selectAttendanceRecordmanageVo"/>
+        where record_id = #{recordId}
+    </select>
+        
+    <insert id="insertAttendanceRecordmanage" parameterType="AttendanceRecordmanage" useGeneratedKeys="true" keyProperty="recordId">
+        insert into attendance_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="attendanceDate != null">attendance_date,</if>
+            <if test="startTime != null">start_time,</if>
+            <if test="endTime != null">end_time,</if>
+            <if test="attendanceType != null">attendance_type,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="attendanceDate != null">#{attendanceDate},</if>
+            <if test="startTime != null">#{startTime},</if>
+            <if test="endTime != null">#{endTime},</if>
+            <if test="attendanceType != null">#{attendanceType},</if>
+         </trim>
+    </insert>
+
+    <update id="updateAttendanceRecordmanage" parameterType="AttendanceRecordmanage">
+        update attendance_record
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="attendanceDate != null">attendance_date = #{attendanceDate},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="endTime != null">end_time = #{endTime},</if>
+            <if test="attendanceType != null">attendance_type = #{attendanceType},</if>
+        </trim>
+        where record_id = #{recordId}
+    </update>
+
+    <delete id="deleteAttendanceRecordmanageByRecordId" parameterType="Long">
+        delete from attendance_record where record_id = #{recordId}
+    </delete>
+
+    <delete id="deleteAttendanceRecordmanageByRecordIds" parameterType="String">
+        delete from attendance_record where record_id in 
+        <foreach item="recordId" collection="array" open="(" separator="," close=")">
+            #{recordId}
+        </foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.reimbursement.mapper.ReimbursementTypeMapper">
+    
+    <resultMap type="ReimbursementType" id="ReimbursementTypeResult">
+        <result property="typeId"    column="type_id"    />
+        <result property="name"    column="name"    />
+    </resultMap>
+
+    <sql id="selectReimbursementTypeVo">
+        select type_id, name from ReimbursementType
+    </sql>
+
+    <select id="selectReimbursementTypeList" parameterType="ReimbursementType" resultMap="ReimbursementTypeResult">
+        <include refid="selectReimbursementTypeVo"/>
+        <where>  
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+        </where>
+    </select>
+    
+    <select id="selectReimbursementTypeByTypeId" parameterType="Long" resultMap="ReimbursementTypeResult">
+        <include refid="selectReimbursementTypeVo"/>
+        where type_id = #{typeId}
+    </select>
+        
+    <insert id="insertReimbursementType" parameterType="ReimbursementType" useGeneratedKeys="true" keyProperty="typeId">
+        insert into ReimbursementType
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null">name,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null">#{name},</if>
+         </trim>
+    </insert>
+
+    <update id="updateReimbursementType" parameterType="ReimbursementType">
+        update ReimbursementType
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null">name = #{name},</if>
+        </trim>
+        where type_id = #{typeId}
+    </update>
+
+    <delete id="deleteReimbursementTypeByTypeId" parameterType="Long">
+        delete from ReimbursementType where type_id = #{typeId}
+    </delete>
+
+    <delete id="deleteReimbursementTypeByTypeIds" parameterType="String">
+        delete from ReimbursementType where type_id in 
+        <foreach item="typeId" collection="array" open="(" separator="," close=")">
+            #{typeId}
+        </foreach>
+    </delete>
+</mapper>

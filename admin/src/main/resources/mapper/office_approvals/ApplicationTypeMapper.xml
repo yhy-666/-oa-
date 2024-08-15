@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.office_approvals.mapper.ApplicationTypeMapper">
+    
+    <resultMap type="ApplicationType" id="ApplicationTypeResult">
+        <result property="typeId"    column="type_id"    />
+        <result property="name"    column="name"    />
+    </resultMap>
+
+    <sql id="selectApplicationTypeVo">
+        select type_id, name from applicationType
+    </sql>
+
+    <select id="selectApplicationTypeList" parameterType="ApplicationType" resultMap="ApplicationTypeResult">
+        <include refid="selectApplicationTypeVo"/>
+        <where>  
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+        </where>
+    </select>
+    
+    <select id="selectApplicationTypeByTypeId" parameterType="Long" resultMap="ApplicationTypeResult">
+        <include refid="selectApplicationTypeVo"/>
+        where type_id = #{typeId}
+    </select>
+        
+    <insert id="insertApplicationType" parameterType="ApplicationType" useGeneratedKeys="true" keyProperty="typeId">
+        insert into applicationType
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null">name,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null">#{name},</if>
+         </trim>
+    </insert>
+
+    <update id="updateApplicationType" parameterType="ApplicationType">
+        update applicationType
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null">name = #{name},</if>
+        </trim>
+        where type_id = #{typeId}
+    </update>
+
+    <delete id="deleteApplicationTypeByTypeId" parameterType="Long">
+        delete from applicationType where type_id = #{typeId}
+    </delete>
+
+    <delete id="deleteApplicationTypeByTypeIds" parameterType="String">
+        delete from applicationType where type_id in 
+        <foreach item="typeId" collection="array" open="(" separator="," close=")">
+            #{typeId}
+        </foreach>
+    </delete>
+</mapper>

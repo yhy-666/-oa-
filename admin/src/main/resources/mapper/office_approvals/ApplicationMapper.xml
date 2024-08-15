@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.office_approvals.mapper.ApplicationMapper">
+    
+    <resultMap type="Application" id="ApplicationResult">
+        <result property="applicationId"    column="application_id"    />
+        <result property="type"    column="type"    />
+        <result property="applicantId"    column="applicant_id"    />
+        <result property="approverId"    column="approver_id"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="status"    column="status"    />
+        <result property="content"    column="content"    />
+    </resultMap>
+
+    <sql id="selectApplicationVo">
+        select application_id, type, applicant_id, approver_id, create_time, status, content from application
+    </sql>
+
+    <select id="selectApplicationList" parameterType="Application" resultMap="ApplicationResult">
+        <include refid="selectApplicationVo"/>
+        <where>  
+            <if test="type != null  and type != ''"> and type = #{type}</if>
+<!--            <if test="createTime != null "> and create_time = #{createTime}</if>-->
+            <if test="createTime != null ">
+                and create_time &gt;= #{createTime} and create_time &lt; DATE_ADD(#{createTime}, INTERVAL 1 DAY)
+            </if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectApplicationByApplicationId" parameterType="Long" resultMap="ApplicationResult">
+        <include refid="selectApplicationVo"/>
+        where application_id = #{applicationId}
+    </select>
+        
+    <insert id="insertApplication" parameterType="Application" useGeneratedKeys="true" keyProperty="applicationId">
+        insert into application
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="type != null">type,</if>
+            <if test="applicantId != null">applicant_id,</if>
+            <if test="approverId != null">approver_id,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="status != null">status,</if>
+            <if test="content != null">content,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="type != null">#{type},</if>
+            <if test="applicantId != null">#{applicantId},</if>
+            <if test="approverId != null">#{approverId},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="status != null">#{status},</if>
+            <if test="content != null">#{content},</if>
+         </trim>
+    </insert>
+
+    <update id="updateApplication" parameterType="Application">
+        update application
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="type != null">type = #{type},</if>
+            <if test="applicantId != null">applicant_id = #{applicantId},</if>
+            <if test="approverId != null">approver_id = #{approverId},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="content != null">content = #{content},</if>
+        </trim>
+        where application_id = #{applicationId}
+    </update>
+
+    <delete id="deleteApplicationByApplicationId" parameterType="Long">
+        delete from application where application_id = #{applicationId}
+    </delete>
+
+    <delete id="deleteApplicationByApplicationIds" parameterType="String">
+        delete from application where application_id in 
+        <foreach item="applicationId" collection="array" open="(" separator="," close=")">
+            #{applicationId}
+        </foreach>
+    </delete>
+</mapper>
