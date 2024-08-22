@@ -5,6 +5,7 @@
       <el-col :span="8" v-for="email in emails" :key="email.emailID">
         <el-card
           @click.native="fetchEmailDetails(email.emailID)"
+<<<<<<< HEAD
           :style="{ backgroundColor: email.isRead ? '#FFFFFF' : '#90EE90' }"
         >
           <div class="email-info">
@@ -12,6 +13,9 @@
             <p>发送时间：{{ formatDateTime(email.sentDate) }}</p>
             <el-tag :type="email.isRead ? 'success' : 'info'">{{ email.isRead ? '已读' : '未读' }}</el-tag>
           </div>
+=======
+        >
+>>>>>>> 07efba57c36be65aaa779c8378d84afb3a30e216
         </el-card>
       </el-col>
       <el-col v-if="!emails.length" :span="8">
@@ -19,6 +23,7 @@
       </el-col>
     </el-row>
 
+<<<<<<< HEAD
     <!-- 使用Element UI的Dialog组件展示选中的邮件详情 -->
     <el-dialog :visible.sync="dialogVisible" title="邮件详情" width="60%">
       <div v-if="selectedEmail">
@@ -28,6 +33,8 @@
         <div v-html="selectedEmail.emailBody" class="email-body"></div>
       </div>
     </el-dialog>
+=======
+>>>>>>> 07efba57c36be65aaa779c8378d84afb3a30e216
   </div>
 </template>
 
@@ -37,6 +44,7 @@
 
 
 <script>
+<<<<<<< HEAD
 import { listUser, getUserProfile } from "@/api/system/user";
 // 导入API方法...
 
@@ -64,6 +72,9 @@ export default {
 
   }
 }
+=======
+
+>>>>>>> 07efba57c36be65aaa779c8378d84afb3a30e216
 </script>
 
 <style scoped>
