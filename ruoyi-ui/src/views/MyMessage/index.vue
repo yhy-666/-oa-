@@ -13,15 +13,22 @@
           </div>
         </el-card>
       </el-col>
+      <el-col v-if="!emails.length" :span="8">
+        <div class="no-email">没有邮件</div>
+      </el-col>
     </el-row>
 
     <!-- 使用Element UI的Dialog组件展示选中的邮件详情 -->
-    <el-dialog :visible.sync="dialogVisible" title="邮件详情" width="70%">
+    <el-dialog :visible.sync="dialogVisible" title="邮件详情" width="60%">
       <div v-if="selectedEmail">
         <h3>{{ selectedEmail.emailTitle || '无标题' }}</h3>
         <p>发件人：{{ selectedEmail.userName }}</p>
         <p>发送时间：{{ formatDateTime(selectedEmail.sentDate) }}</p>
         <div v-html="selectedEmail.emailBody" class="email-body"></div>
+        <p v-if="selectedEmail.fileName">
+          附件：
+          <el-button type="primary" size="small" @click.stop="downloadFile(selectedEmail.fileName)">下载附件</el-button>
+        </p>
       </div>
     </el-dialog>
   </div>
@@ -34,7 +41,14 @@
 .email-body {
   margin-top: 30px;
 }
-
+.no-email {
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 30px;
+}
 </style>
 
 
@@ -62,6 +76,8 @@ export default {
         this.user = response.data;
         // 确保获取到user信息后再去获取邮件列表
         this.fetchEmails(); // 现在在这里调用，确保了user.userId不会是undefined
+      }).catch(error => {
+        console.error("获取当前用户信息失败:", error);
       });
     },
     fetchEmails() {
@@ -105,6 +121,6 @@ export default {
   cursor: pointer;
 }
 .email-body {
-  margin-top: 30px;
+  margin-top: 20px;
 }
 </style>
