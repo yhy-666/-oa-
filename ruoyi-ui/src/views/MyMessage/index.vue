@@ -5,6 +5,7 @@
       <el-col :span="8" v-for="email in emails" :key="email.emailID">
         <el-card
           @click.native="fetchEmailDetails(email.emailID)"
+          :style="{ backgroundColor: email.isRead ? '#FFFFFF' : '#90EE90' }"
         >
           <div class="email-info">
             <p>{{ email.userName }} - {{ email.emailTitle || '无标题' }}</p>
@@ -39,15 +40,16 @@
   cursor: pointer;
 }
 .email-body {
-  margin-top: 30px;
+  margin-top: 20px;
 }
 .no-email {
   text-align: center;
+  color: #999;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  font-size: 30px;
+  font-size: 24px;
 }
 </style>
 
@@ -87,6 +89,9 @@ export default {
             // 将日期字符串转换为日期对象进行比较
             return new Date(b.sentDate) - new Date(a.sentDate);
           });
+        })
+        .catch(error => {
+          console.error("获取邮件列表失败:", error);
         });
     },
 
@@ -96,6 +101,9 @@ export default {
           this.selectedEmail = response.data;
           this.dialogVisible = true; // 显示对话框
           this.markEmailAsRead(emailId); // 标记邮件为已读
+        })
+        .catch(error => {
+          console.error("获取邮件详情失败:", error);
         });
     },
     markEmailAsRead(emailId) {
@@ -105,13 +113,20 @@ export default {
           if (email) {
             email.isRead = true; // 更新本地状态
           }
+        })
+        .catch(error => {
+          console.error("标记邮件为已读失败:", error);
         });
     },
     downloadFile(fileName) {
       const downloadUrl = `/api/FileUpload/download/${fileName}`;
       window.open(downloadUrl);
     },
-
+    // 时间显示格式化
+    formatDateTime(dateTimeStr) {
+      const date = new Date(dateTimeStr);
+      return date.toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-').slice(0, -3);
+    }
   }
 }
 </script>
