@@ -1,20 +1,5 @@
 <template>
   <div class="app-container">
-    <!--签到签退按钮的位置-->
-    <el-button
-      type="primary"
-      style="font-size: 20px; padding: 10px 20px"
-      @click="sign_in"
-      v-hasPermi="['attendance:sign_in_out:in']"
-      >签到</el-button
-    >
-    <el-button
-      type="primary"
-      style="font-size: 20px; padding: 10px 20px"
-      @click="sign_out"
-      v-hasPermi="['attendance:sign_in_out:out']"
-      >签退</el-button
-    >
     <el-form
       :model="queryParams"
       ref="queryForm"
@@ -31,14 +16,24 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <!--      <el-form-item label="用户ID" prop="userId">-->
-      <!--        <el-input-->
-      <!--          v-model="queryParams.userId"-->
-      <!--          placeholder="请输入用户ID"-->
-      <!--          clearable-->
-      <!--          @keyup.enter.native="handleQuery"-->
-      <!--        />-->
-      <!--      </el-form-item>-->
+      <el-form-item label="用户ID" prop="userId">
+        <el-input
+          v-model="queryParams.userId"
+          placeholder="请输入用户ID"
+          clearable
+          @keyup.enter.native="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="考勤日期" prop="attendanceDate">
+        <el-date-picker
+          clearable
+          v-model="queryParams.attendanceDate"
+          type="date"
+          value-format="yyyy-MM-dd"
+          placeholder="请选择考勤日期"
+        >
+        </el-date-picker>
+      </el-form-item>
       <el-form-item>
         <el-button
           type="primary"
@@ -61,7 +56,7 @@
           icon="el-icon-plus"
           size="mini"
           @click="handleAdd"
-          v-hasPermi="['attendance:sign_in_out:add']"
+          v-hasPermi="['attendance:manage:add']"
           >新增</el-button
         >
       </el-col>
@@ -73,7 +68,7 @@
           size="mini"
           :disabled="single"
           @click="handleUpdate"
-          v-hasPermi="['attendance:sign_in_out:edit']"
+          v-hasPermi="['attendance:manage:edit']"
           >修改</el-button
         >
       </el-col>
@@ -85,7 +80,7 @@
           size="mini"
           :disabled="multiple"
           @click="handleDelete"
-          v-hasPermi="['attendance:sign_in_out:remove']"
+          v-hasPermi="['attendance:manage:remove']"
           >删除</el-button
         >
       </el-col>
@@ -96,7 +91,7 @@
           icon="el-icon-download"
           size="mini"
           @click="handleExport"
-          v-hasPermi="['attendance:sign_in_out:export']"
+          v-hasPermi="['attendance:manage:export']"
           >导出</el-button
         >
       </el-col>
@@ -108,7 +103,7 @@
 
     <el-table
       v-loading="loading"
-      :data="sign_in_outList"
+      :data="manageList"
       @selection-change="handleSelectionChange"
     >
       <el-table-column type="selection" width="55" align="center" />
@@ -156,7 +151,7 @@
             type="text"
             icon="el-icon-edit"
             @click="handleUpdate(scope.row)"
-            v-hasPermi="['attendance:sign_in_out:edit']"
+            v-hasPermi="['attendance:manage:edit']"
             >修改</el-button
           >
           <el-button
@@ -164,7 +159,7 @@
             type="text"
             icon="el-icon-delete"
             @click="handleDelete(scope.row)"
-            v-hasPermi="['attendance:sign_in_out:remove']"
+            v-hasPermi="['attendance:manage:remove']"
             >删除</el-button
           >
         </template>
@@ -179,7 +174,7 @@
       @pagination="getList"
     />
 
-    <!-- 添加或修改签到签退对话框 -->
+    <!-- 添加或修改考勤记录对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="用户ID" prop="userId">
@@ -232,15 +227,15 @@
 
 <script>
 import {
-  addSign_in_out,
-  delSign_in_out,
-  getSign_in_out,
-  listSign_in_out,
-  updateSign_in_out,
-} from "@/api/attendance/sign_in_out";
+  listManage,
+  getManage,
+  delManage,
+  addManage,
+  updateManage,
+} from "@/api/attendance/manage";
 
 export default {
-  name: "Sign_in_out",
+  name: "Manage",
   data() {
     return {
       // 遮罩层
@@ -255,8 +250,8 @@ export default {
       showSearch: true,
       // 总条数
       total: 0,
-      // 签到签退表格数据
-      sign_in_outList: [],
+      // 考勤记录表格数据
+      manageList: [],
       // 弹出层标题
       title: "",
       // 是否显示弹出层
@@ -273,129 +268,17 @@ export default {
       form: {},
       // 表单校验
       rules: {},
-      //查询本人的签到签退记录表单
-      myForm: {
-        recordId: null,
-        userId: null,
-        attendanceDate: null,
-        startTime: null,
-        endTime: null,
-        attendanceType: null,
-      },
-      //签到时获取记录的条数
-      myTotal: 0,
-      // 签到签退参数
-      signParams: {
-        recordId: null,
-        userId: null,
-        attendanceDate: null,
-        startTime: null,
-        endTime: null,
-        attendanceType: null,
-      },
     };
   },
   created() {
     this.getList();
   },
   methods: {
-    /** 获取当前年月日时分秒的方法 */
-    getCurrentDateTime(value) {
-      const date = new Date();
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      const hours = String(date.getHours()).padStart(2, "0");
-      const minutes = String(date.getMinutes()).padStart(2, "0");
-      const seconds = String(date.getSeconds()).padStart(2, "0");
-      const currentDateTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-      const currentDateTime2 = `${year}-${month}-${day} ${0}:${0}:${0}`;
-      if (value === 1) return currentDateTime;
-      else {
-        return currentDateTime2;
-      }
-    },
-    /** 签到事件*/
-    sign_in() {
-      this.today_is_sign().then(() => {
-        if (this.myTotal !== 0) {
-          this.$modal.msgWarning("今日已签到");
-          return;
-        }
-        var currentDateTime = new Date();
-        var nineAM = new Date();
-        nineAM.setHours(9, 0, 0, 0); // 设置小时、分钟、秒和毫秒
-        if (currentDateTime > nineAM) {
-          this.signParams.attendanceType = "迟到";
-        } else {
-          this.signParams.attendanceType = "正常";
-        }
-        this.signParams.userId = this.$store.state.user.id;
-        this.signParams.attendanceDate = this.getCurrentDateTime();
-        this.signParams.startTime = this.getCurrentDateTime(1);
-        this.signParams.endTime = null;
-
-        addSign_in_out(this.signParams).then((response) => {
-          this.$modal.msgSuccess("签到成功");
-          this.getList();
-        });
-      });
-    },
-    /** 签退事件*/
-    sign_out() {
-      this.today_is_sign().then(() => {
-        if (this.myTotal === 0) {
-          this.$modal.msgWarning("今日未签到");
-          return;
-        }
-        if (this.myForm.endTime !== null) {
-          this.$modal.msgWarning("今日已签退");
-          return;
-        }
-        var currentDateTime = new Date();
-        var nineAM = new Date();
-        nineAM.setHours(18, 0, 0, 0); // 设置小时、分钟、秒和毫秒
-        if (currentDateTime < nineAM) {
-          if (this.myForm.attendanceType === "正常")
-            this.signParams.attendanceType = "早退";
-          else
-            this.signParams.attendanceType =
-              this.myForm.attendanceType + " 早退";
-        } else {
-          if (this.myForm.attendanceType === "正常")
-            this.signParams.attendanceType = "正常";
-          else {
-            this.signParams.attendanceType = this.myForm.attendanceType;
-          }
-        }
-        this.signParams.recordId = this.myForm.recordId;
-        this.signParams.userId = null;
-        this.signParams.attendanceDate = null;
-        this.signParams.startTime = null;
-        this.signParams.endTime = this.getCurrentDateTime(1);
-        updateSign_in_out(this.signParams).then((response) => {
-          this.$modal.msgSuccess("签退成功");
-          this.getList();
-        });
-      });
-    },
-    /** 查询今日的签到记录是否已签到*/
-    today_is_sign() {
-      this.queryParams.attendanceDate = this.getCurrentDateTime();
-      return listSign_in_out(this.queryParams).then((response) => {
-        this.myForm = response.rows[0];
-        this.myTotal = response.total;
-        console.log(this.myTotal);
-        this.queryParams.attendanceDate = null;
-        return response.total;
-      });
-    },
-    /** 查询签到签退列表 */
+    /** 查询考勤记录列表 */
     getList() {
       this.loading = true;
-      this.queryParams.userId = this.$store.state.user.id;
-      listSign_in_out(this.queryParams).then((response) => {
-        this.sign_in_outList = response.rows;
+      listManage(this.queryParams).then((response) => {
+        this.manageList = response.rows;
         this.total = response.total;
         this.loading = false;
       });
@@ -437,16 +320,16 @@ export default {
     handleAdd() {
       this.reset();
       this.open = true;
-      this.title = "添加签到签退";
+      this.title = "添加考勤记录";
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
       const recordId = row.recordId || this.ids;
-      getSign_in_out(recordId).then((response) => {
+      getManage(recordId).then((response) => {
         this.form = response.data;
         this.open = true;
-        this.title = "修改签到签退";
+        this.title = "修改考勤记录";
       });
     },
     /** 提交按钮 */
@@ -454,13 +337,13 @@ export default {
       this.$refs["form"].validate((valid) => {
         if (valid) {
           if (this.form.recordId != null) {
-            updateSign_in_out(this.form).then((response) => {
+            updateManage(this.form).then((response) => {
               this.$modal.msgSuccess("修改成功");
               this.open = false;
               this.getList();
             });
           } else {
-            addSign_in_out(this.form).then((response) => {
+            addManage(this.form).then((response) => {
               this.$modal.msgSuccess("新增成功");
               this.open = false;
               this.getList();
@@ -473,9 +356,9 @@ export default {
     handleDelete(row) {
       const recordIds = row.recordId || this.ids;
       this.$modal
-        .confirm('是否确认删除签到签退编号为"' + recordIds + '"的数据项？')
+        .confirm('是否确认删除考勤记录编号为"' + recordIds + '"的数据项？')
         .then(function () {
-          return delSign_in_out(recordIds);
+          return delManage(recordIds);
         })
         .then(() => {
           this.getList();
@@ -486,11 +369,11 @@ export default {
     /** 导出按钮操作 */
     handleExport() {
       this.download(
-        "attendance/sign_in_out/export",
+        "attendance/manage/export",
         {
           ...this.queryParams,
         },
-        `sign_in_out_${new Date().getTime()}.xlsx`
+        `manage_${new Date().getTime()}.xlsx`
       );
     },
   },
